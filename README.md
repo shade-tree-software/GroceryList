@@ -1,2 +1,2 @@
-# lhchat
-simple chat server based on Node.js, Express.js, and Socket.io
+# grocery_list
+A Node.js app for creating grocery lists
