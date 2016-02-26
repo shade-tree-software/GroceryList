@@ -38,7 +38,7 @@ button:focus {
     outline: none;
 }
 
-#list_items li {
+#list_items li, #new_item_input {
     padding-top: 5px;
     padding-bottom: 5px;
 }

@@ -3,7 +3,7 @@ $(function () {
   server.on('connect', function(){
   });
   server.on('new grocery item', function(new_grocery_item){
-    $('#list_items').append('<li>' + new_grocery_item + '</li>');
+    $('#list_items').show().append('<li>' + new_grocery_item + '</li>');
     $('#no_items').hide();
   });
   $('#new_item_form').submit(function(e){
