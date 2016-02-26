@@ -3,21 +3,14 @@ var app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 
-var sendBroadcast = function(client, broadcast_message){
-  client.broadcast.emit('broadcast_message', broadcast_message);
-  client.emit('broadcast_message', broadcast_message);
+var broadcastNewItem = function(client, new_grocery_item){
+  client.broadcast.emit('new grocery item', new_grocery_item);
+  client.emit('new grocery item', new_grocery_item);
 };
 
 io.on('connection', function(client){
-  client.on('nickname', function(nickname){
-    client.nickname = nickname;
-    sendBroadcast(client, client.nickname + " has joined the room");
-  });
-  client.on('message', function(message){
-    sendBroadcast(client, client.nickname + ": " + message);
-  });
-  client.on('disconnect', function(){
-    client.broadcast.emit('broadcast_message', client.nickname + " has left the room");
+  client.on('new grocery item', function(new_grocery_item){
+    broadcastNewItem(client, new_grocery_item);
   });
 });
 

@@ -1,26 +1,26 @@
-#chat_window, #chat_form {
+#list_items, #new_item_form {
     width: 350px;
     max-width: 95%;
 }
 
-#chat_window, #chat_input {
+#list_items, #new_item_input {
     background: lightyellow;
     padding: 3px;
     border: 3px solid black;
     border-radius: 10px;
 }
 
-#chat_window {
+#list_items {
     min-height: 50px;
     list-style-type: none;
 }
 
-#chat_input {
+#new_item_input {
     display: block;
     width: 100%;
 }
 
-#chat_submit {
+#new_item_submit {
     border-radius: 10px;
     margin-top: 10px;
     float: right;
@@ -36,4 +36,17 @@ select:focus,
 textarea:focus,
 button:focus {
     outline: none;
+}
+
+#list_items li {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+#list_items li:nth-child(odd) {
+    background: lightyellow;
+}
+
+#list_items li:nth-child(even) {
+    background: #9cff9c;
 }

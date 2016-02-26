@@ -1,16 +1,18 @@
 $(function () {
   var server = io.connect(window.location.href);
-  server.on('connect', function(data){
-    server.emit('nickname', prompt('Enter a nickname to identify you in the chat room'));
+  server.on('connect', function(){
   });
-  server.on('broadcast_message', function(broadcast_message){
-    console.log("message received: " + broadcast_message);
-    $('#chat_window').append('<li>' + broadcast_message + '</li>');
+  server.on('new grocery item', function(new_grocery_item){
+    $('#list_items').append('<li>' + new_grocery_item + '</li>');
+    $('#no_items').hide();
   });
-  $('#chat_form').submit(function(e){
+  $('#new_item_form').submit(function(e){
     e.preventDefault();
-    var $chat_input = $('#chat_input');
-    server.emit('message', $chat_input.val());
-    $chat_input.val('');
+    var $new_item_input = $('#new_item_input');
+    var new_item = $new_item_input.val();
+    if (new_item.length > 0) {
+      server.emit('new grocery item', $new_item_input.val());
+      $new_item_input.val('');
+    }
   });
 });

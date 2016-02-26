@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>LH Chat</title>
+    <title>Grocery List</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.3/modernizr.min.js"></script>
@@ -10,11 +10,13 @@
 </head>
 
 <body>
-<ul id="chat_window">
+<h1>Grocery List</h1>
+<p id="no_items">There are no items on the List</p>
+<ul id="list_items">
 </ul>
-<form id="chat_form">
-    <input id="chat_input" autocomplete="off"/>
-    <input id="chat_submit" type="submit" value="Send"/>
+<form id="new_item_form">
+    <input id="new_item_input"/>
+    <input id="new_item_submit" type="submit" value="Add to List"/>
 </form>
 
 <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
