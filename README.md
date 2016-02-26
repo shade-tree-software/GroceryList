@@ -1,2 +1,2 @@
 # grocery_list
-A Node.js all for creating grocery lists
+A Node.js app for creating grocery lists
