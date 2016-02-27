@@ -1,23 +1,30 @@
-#list_items, #new_item_form {
+#grocery-items, #new_item_form {
     width: 350px;
     max-width: 95%;
 }
 
-#list_items, #new_item_input {
+#grocery-items {
     background: lightyellow;
     padding: 3px;
     border: 3px solid black;
     border-radius: 10px;
 }
 
-#list_items {
+#new_item_input {
+    background: lightyellow;
+    padding: 10px;
+    border: 3px solid black;
+    border-radius: 10px;
+}
+
+#grocery-items {
     min-height: 50px;
     list-style-type: none;
 }
 
 #new_item_input {
     display: block;
-    width: 100%;
+    width: calc(100% - 14px);
 }
 
 #new_item_submit {
@@ -38,15 +45,26 @@ button:focus {
     outline: none;
 }
 
-#list_items li, #new_item_input {
-    padding-top: 5px;
-    padding-bottom: 5px;
+#grocery-items li {
+    padding: 7px;
 }
 
-#list_items li:nth-child(odd) {
+#grocery-items li, #new_item_input, #new_item_submit {
+    font-size: 20px;
+}
+
+#grocery-items li:nth-child(odd) {
     background: lightyellow;
 }
 
-#list_items li:nth-child(even) {
+#grocery-items li:nth-child(even) {
     background: #9cff9c;
+}
+
+.delete-button {
+    padding-left: 10px;
+    padding-right: 10px;
+    float: right;
+    font-size: 100%;
+    color: red;
 }
