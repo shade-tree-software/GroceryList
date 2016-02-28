@@ -2,25 +2,48 @@ var express = require('express');
 var app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
-var redis = require('redis');
-var redisClient = redis.createClient(process.env.REDIS_URL);
+var redis = null;
+var redisClient = null;
+var ioClient = null;
+var socket = null;
+var master = (process.env.MASTER === 'true');
+var slave = !master;
+var slaveData = [];
+
+if (master) {
+    console.log("running as master, connecting to redis")
+    redis = require('redis');
+    redisClient = redis.createClient(process.env.REDIS_URL);
+}
+if (slave) {
+    console.log("running as slave, connecting to master");
+    ioClient = require('socket.io-client');
+    socket = ioClient.connect('http://hamilton-groceries.herokuapp.com', {reconnect: true});
+}
 
 var broadcastAll = function (client, message, data) {
-    console.log("broadcasting: " + data);
+    console.log("broadcasting '" + message + "' for " + data);
     client.broadcast.emit(message, data);
     client.emit(message, data);
 };
 
+if (slave) {
+    socket.on('connect', function (socket) {
+        console.log('connected to master');
+    });
+}
+
 io.on('connection', function (client) {
     console.log('new client connected');
-    //console.log(client.client.request.headers);
-    redisClient.smembers('grocery keys', function (err, groceryKeys) {
-        console.log('found grocery keys [' + groceryKeys + ']');
-        groceryKeys.forEach(function (groceryKey) {
-            redisClient.hgetall(groceryKey, function (err, groceryData) {
-                var groceryItemJSON = JSON.stringify({key: groceryKey, data: groceryData});
-                console.log('telling client to add item ' + groceryItemJSON);
-                client.emit('new grocery item', groceryItemJSON);
+    client.on('request all', function () {
+        redisClient.smembers('grocery keys', function (err, groceryKeys) {
+            console.log('found grocery keys [' + groceryKeys + ']');
+            groceryKeys.forEach(function (groceryKey) {
+                redisClient.hgetall(groceryKey, function (err, groceryData) {
+                    var groceryItemJSON = JSON.stringify({key: groceryKey, data: groceryData});
+                    console.log('telling client to add item ' + groceryItemJSON);
+                    client.emit('new grocery item', groceryItemJSON);
+                });
             });
         });
     });

@@ -1,6 +1,7 @@
 $(function () {
     var server = io.connect(window.location.href);
     server.on('connect', function () {
+        server.emit("request all");
     });
     server.on('new grocery item', function (groceryItemJSON) {
         console.log("received item "+ groceryItemJSON);
