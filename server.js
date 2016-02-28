@@ -5,21 +5,9 @@ var io = require('socket.io')(server);
 var redis = null;
 var redisClient = null;
 var ioClient = null;
-var socket = null;
-var master = (process.env.MASTER === 'true');
-var slave = !master;
-var slaveData = [];
-
-if (master) {
-    console.log("running as master, connecting to redis")
-    redis = require('redis');
-    redisClient = redis.createClient(process.env.REDIS_URL);
-}
-if (slave) {
-    console.log("running as slave, connecting to master");
-    ioClient = require('socket.io-client');
-    socket = ioClient.connect('http://hamilton-groceries.herokuapp.com', {reconnect: true});
-}
+var master = null;
+var isMaster = (process.env.MASTER === 'true');
+var isSlave = !isMaster;
 
 var broadcastAll = function (client, message, data) {
     console.log("broadcasting '" + message + "' for " + data);
@@ -27,44 +15,84 @@ var broadcastAll = function (client, message, data) {
     client.emit(message, data);
 };
 
-if (slave) {
-    socket.on('connect', function (socket) {
+var handleClientConnections = function() {
+    io.on('connection', function (client) {
+        console.log('new client connected');
+        client.on('request all', function () {
+            console.log("received 'request all' from client");
+            if (isMaster) {
+                redisClient.smembers('grocery keys', function (err, groceryKeys) {
+                    console.log('found grocery keys [' + groceryKeys + ']');
+                    groceryKeys.forEach(function (groceryKey) {
+                        redisClient.hgetall(groceryKey, function (err, groceryData) {
+                            var groceryItemJSON = JSON.stringify({key: groceryKey, data: groceryData});
+                            console.log('telling client to add item ' + groceryItemJSON);
+                            client.emit('new grocery item', groceryItemJSON);
+                        });
+                    });
+                });
+            } else {
+                console.log("sending 'request all' to master");
+                master.emit('request all');
+            }
+        });
+        client.on('new grocery item', function (groceryDataJSON) {
+            console.log('received item: ' + groceryDataJSON);
+            if (isMaster) {
+                var groceryData = JSON.parse(groceryDataJSON);
+                redisClient.incr('grocery key', function (err, newKey) {
+                    var groceryKey = 'groceries:' + newKey;
+                    console.log('installing item ' + groceryKey + ' ' + groceryDataJSON);
+                    redisClient.sadd('grocery keys', groceryKey);
+                    redisClient.hmset(groceryKey, groceryData);
+                    broadcastAll(client, "new grocery item", JSON.stringify({key: groceryKey, data: groceryData}));
+                });
+            } else {
+                console.log('sending new grocery item to master: ' + groceryDataJSON);
+                master.emit('new grocery item', groceryDataJSON);
+            }
+        });
+        client.on('remove grocery item', function (groceryKey) {
+            console.log("received remove request for item " + groceryKey);
+            if (isMaster) {
+                redisClient.del(groceryKey);
+                redisClient.srem('grocery keys', groceryKey);
+                broadcastAll(client, "remove grocery item", groceryKey);
+            } else {
+                console.log('sending remove request to master for item ' + groceryKey);
+                master.emit('remove grocery item', groceryKey);
+            }
+        });
+    });
+};
+
+var handleMasterConnections = function(){
+    master.on('new grocery item', function (groceryItemJSON) {
+        console.log("received item "+ groceryItemJSON);
+        //broadcastAll(client, "new grocery item", JSON.stringify({key: groceryKey, data: groceryData}));
+    });
+    master.on('remove grocery item', function(groceryKey){
+        console.log("received remove request for item " + groceryKey);
+    });
+};
+
+if (isSlave) {
+    console.log("running as slave, connecting to master");
+    ioClient = require('socket.io-client');
+    master = ioClient.connect('http://hamilton-groceries.herokuapp.com', {reconnect: true});
+    master.on('connect', function () {
         console.log('connected to master');
+        handleMasterConnections();
+        handleClientConnections();
     });
 }
 
-io.on('connection', function (client) {
-    console.log('new client connected');
-    client.on('request all', function () {
-        redisClient.smembers('grocery keys', function (err, groceryKeys) {
-            console.log('found grocery keys [' + groceryKeys + ']');
-            groceryKeys.forEach(function (groceryKey) {
-                redisClient.hgetall(groceryKey, function (err, groceryData) {
-                    var groceryItemJSON = JSON.stringify({key: groceryKey, data: groceryData});
-                    console.log('telling client to add item ' + groceryItemJSON);
-                    client.emit('new grocery item', groceryItemJSON);
-                });
-            });
-        });
-    });
-    client.on('new grocery item', function (groceryDataJSON) {
-        console.log('received item: ' + groceryDataJSON);
-        var groceryData = JSON.parse(groceryDataJSON);
-        redisClient.incr('grocery key', function (err, newKey) {
-            var groceryKey = 'groceries:' + newKey;
-            console.log('installing item ' + groceryKey + ' ' + groceryDataJSON);
-            redisClient.sadd('grocery keys', groceryKey);
-            redisClient.hmset(groceryKey, groceryData);
-            broadcastAll(client, "new grocery item", JSON.stringify({key: groceryKey, data: groceryData}));
-        });
-    });
-    client.on('remove grocery item', function (groceryKey) {
-        console.log("received remove request for item " + groceryKey);
-        redisClient.del(groceryKey);
-        redisClient.srem('grocery keys', groceryKey);
-        broadcastAll(client, "remove grocery item", groceryKey);
-    });
-});
+if (isMaster){
+    console.log("running as master, connecting to redis");
+    redis = require('redis');
+    redisClient = redis.createClient(process.env.REDIS_URL);
+    handleClientConnections();
+}
 
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html');
