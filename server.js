@@ -82,7 +82,7 @@ var handleMasterConnections = function () {
 if (isSlave) {
     console.log("running as slave, connecting to master");
     ioClient = require('socket.io-client');
-    master = ioClient.connect('http://hamilton-groceries.herokuapp.com', {reconnect: true});
+    master = ioClient.connect(process.env.MASTER_URL, {reconnect: true});
     master.on('connect', function () {
         console.log('connected to master');
         handleMasterConnections();
