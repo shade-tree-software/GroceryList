@@ -66,5 +66,13 @@ button:focus {
     padding-right: 10px;
     float: right;
     font-size: 100%;
+}
+
+.delete-button {
     color: red;
+}
+
+.in-cart {
+    color: white;
+    background-color: red;
 }
