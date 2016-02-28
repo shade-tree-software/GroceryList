@@ -2,31 +2,41 @@ $(function () {
     var server = io.connect(window.location.href);
     server.on('connect', function () {
     });
-    server.on('new grocery item', function (new_grocery_item) {
-        console.log("received item: "+ new_grocery_item);
-        var grocery_item = JSON.parse(new_grocery_item);
-        var $li = $('<li><span class="grocery-item">' + grocery_item.item + '</span></li>');
-        var $deleteButton = $('<span data-index="' + grocery_item.index + '" class="delete-button">&times</span>');
-        $li.append($deleteButton);
-        $('#grocery-items').show().append($li);
+    server.on('new grocery item', function (groceryItemJSON) {
+        console.log("received item "+ groceryItemJSON);
+        var groceryItem = JSON.parse(groceryItemJSON);
+        var $groceryItems = $('#grocery-items');
+        $groceryItems.find("[data-key='" + groceryItem.key + "']").remove();
+        var $li = $('<li data-key="' + groceryItem.key + '"></li>');
+        var $dataSpan = $('<span class="grocery-item">' + groceryItem.data.name + '</span>');
+        var $deleteButton = $('<span class="delete-button">&times</span>');
+        $li.append($dataSpan).append($deleteButton);
+        $groceryItems.show().append($li);
         $deleteButton.click(function(){
-            console.log('delete');
-            var index = parseInt($(this).attr("data-index"));
-            server.emit("remove grocery item", index);
+            var groceryKey = $(this).parent().attr("data-key");
+            console.log('request server to delete item ' + groceryKey);
+            server.emit("remove grocery item", groceryKey);
         });
         $('#no_items').hide();
     });
-    server.on('remove grocery item', function(index){
-        console.log("received remove request for item: " + index);
-        $('#grocery-items').find("[data-index='" + index + "']").parent().remove();
+    server.on('remove grocery item', function(groceryKey){
+        console.log("received remove request for item " + groceryKey);
+        var $groceryItems = $('#grocery-items');
+        $groceryItems.find("[data-key='" + groceryKey + "']").remove();
+        if ($groceryItems.find('li').length < 1){
+            $groceryItems.hide();
+            $('#no_items').show();
+        }
     });
     $('#new_item_form').submit(function (e) {
         e.preventDefault();
-        var $new_item_input = $('#new_item_input');
-        var new_item = $new_item_input.val();
-        if (new_item.length > 0) {
-            server.emit('new grocery item', $new_item_input.val());
-            $new_item_input.val('');
+        var $newItemInput = $('#new_item_input');
+        var newItem = $newItemInput.val();
+        if (newItem.length > 0) {
+            var groceryDataJSON = JSON.stringify({name: newItem});
+            console.log('telling server to add item: ' + groceryDataJSON);
+            server.emit('new grocery item', groceryDataJSON);
+            $newItemInput.val('');
         }
     });
 });
