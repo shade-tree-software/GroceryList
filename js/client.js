@@ -1,4 +1,28 @@
 $(function () {
+    var deleteGroceryItem = function ($elem) {
+        var groceryKey = $elem.parent().attr("data-key");
+        console.log("sending 'remove grocery item' to server for " + groceryKey);
+        server.emit("remove grocery item", groceryKey);
+    };
+
+    var toggleInCart = function($elem){
+        var groceryKey = $elem.parent().attr("data-key");
+        var action = '';
+        if ($elem.css('text-decoration') === 'line-through' ) {
+            action = 'remove item from cart';
+            //$elem.css("text-decoration", '');
+            //$elem.parent().find('.in-cart').hide();
+            //$elem.parent().find('.delete-button').show();
+        }else {
+            action = 'add item to cart';
+            //$elem.css("text-decoration", 'line-through');
+            //$elem.parent().find('.delete-button').hide();
+            //$elem.parent().find('.in-cart').show();
+        }
+        console.log("sending '" + action + "' to server for " + groceryKey);
+        server.emit(action, groceryKey);
+    };
+
     var server = io.connect(window.location.href);
     server.on('connect', function () {
         console.log('established new connection to server, clearing local grocery list');
@@ -14,12 +38,14 @@ $(function () {
         var $li = $('<li data-key="' + groceryItem.key + '"></li>');
         var $dataSpan = $('<span class="grocery-item">' + groceryItem.data.name + '</span>');
         var $deleteButton = $('<span class="delete-button">&times</span>');
-        $li.append($dataSpan).append($deleteButton);
+        var $inCart = $('<span hidden class="in-cart">in cart!</span>');
+        $li.append($dataSpan).append($deleteButton).append($inCart);
         $groceryItems.show().append($li);
-        $deleteButton.click(function () {
-            var groceryKey = $(this).parent().attr("data-key");
-            console.log("sending 'remove grocery item' to server for " + groceryKey);
-            server.emit("remove grocery item", groceryKey);
+        $deleteButton.click(function(){
+            deleteGroceryItem($(this));
+        });
+        $dataSpan.click(function(){
+            toggleInCart($(this));
         });
         $('#no_items').hide();
     });

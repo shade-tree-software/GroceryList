@@ -53,14 +53,23 @@ var handleClientConnections = function () {
             }
         });
         client.on('remove grocery item', function (groceryKey) {
-            console.log("received remove request for " + groceryKey);
+            console.log("received 'remove grocery item' for " + groceryKey);
             if (isMaster) {
                 redisClient.del(groceryKey);
                 redisClient.srem('grocery keys', groceryKey);
                 broadcastAll(client, "remove grocery item", groceryKey);
             } else {
-                console.log("sending 'remove grocery item' to master " + groceryKey);
+                console.log("sending 'remove grocery item' to master for " + groceryKey);
                 master.emit('remove grocery item', groceryKey);
+            }
+        });
+        client.on('add item to cart', function (groceryKey) {
+            console.log("received 'add item to cart' for " + groceryKey);
+            if (isMaster) {
+
+            } else {
+                console.log("sending 'add item to cart' to master for " + groceryKey);
+                master.emit('add item to cart', groceryKey);
             }
         });
     });
