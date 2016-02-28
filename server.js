@@ -63,13 +63,19 @@ var handleClientConnections = function () {
                 master.emit('remove grocery item', groceryKey);
             }
         });
-        client.on('add item to cart', function (groceryKey) {
-            console.log("received 'add item to cart' for " + groceryKey);
+        client.on('toggle in cart', function (groceryKey) {
+            console.log("received 'toggle in cart' for " + groceryKey);
             if (isMaster) {
-
+               redisClient.hget(groceryKey, 'in_cart', function(err, val){
+                 var newVal = (val === 'true' ? 'false' : 'true');
+                   console.log('updating ' + groceryKey + " 'in_cart' to '" + newVal + "'" );
+                   redisClient.hset(groceryKey, 'in_cart', newVal);
+                   var data = JSON.stringify({key: groceryKey, update: {'in_cart': newVal}});
+                   broadcastAll(client, 'update grocery item', data);
+               });
             } else {
-                console.log("sending 'add item to cart' to master for " + groceryKey);
-                master.emit('add item to cart', groceryKey);
+                console.log("sending 'toggle in cart' to master for " + groceryKey);
+                master.emit('toggle in cart', groceryKey);
             }
         });
     });
@@ -85,6 +91,11 @@ var handleMasterConnections = function () {
         console.log("received 'remove grocery item' from master for " + groceryKey);
         console.log("broadcasting 'remove grocery item' for " + groceryKey);
         io.sockets.emit("remove grocery item", groceryKey);
+    });
+    master.on('update grocery item', function(groceryUpdateJSON){
+        console.log("received 'update grocery item' from master " + groceryUpdateJSON);
+        console.log("broadcasting 'update grocery item' for " + groceryUpdateJSON);
+        io.sockets.emit("update grocery item", groceryUpdateJSON);
     });
 };
 

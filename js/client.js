@@ -5,22 +5,23 @@ $(function () {
         server.emit("remove grocery item", groceryKey);
     };
 
-    var toggleInCart = function($elem){
+    var toggleInCart = function ($elem) {
         var groceryKey = $elem.parent().attr("data-key");
-        var action = '';
-        if ($elem.css('text-decoration') === 'line-through' ) {
-            action = 'remove item from cart';
-            //$elem.css("text-decoration", '');
-            //$elem.parent().find('.in-cart').hide();
-            //$elem.parent().find('.delete-button').show();
-        }else {
-            action = 'add item to cart';
-            //$elem.css("text-decoration", 'line-through');
-            //$elem.parent().find('.delete-button').hide();
-            //$elem.parent().find('.in-cart').show();
+        console.log("sending 'toggle in cart' to server for " + groceryKey);
+        server.emit('toggle in cart', groceryKey);
+    };
+
+    var setInCart = function(key, val){
+        $elem = $('#grocery-items').find("[data-key='" + key + "']").find('.grocery-item');
+        if (val === 'true') {
+            $elem.css("text-decoration", 'line-through');
+            $elem.parent().find('.delete-button').hide();
+            $elem.parent().find('.in-cart').show();
+        } else {
+            $elem.css("text-decoration", '');
+            $elem.parent().find('.in-cart').hide();
+            $elem.parent().find('.delete-button').show();
         }
-        console.log("sending '" + action + "' to server for " + groceryKey);
-        server.emit(action, groceryKey);
     };
 
     var server = io.connect(window.location.href);
@@ -30,21 +31,31 @@ $(function () {
         console.log("sending 'request all' to server");
         server.emit("request all");
     });
+    server.on('update grocery item', function (groceryUpdateJSON) {
+        console.log("received 'update grocery item' " + groceryUpdateJSON);
+        var groceryUpdate = JSON.parse(groceryUpdateJSON);
+        if (groceryUpdate.update.hasOwnProperty('in_cart')) {
+            setInCart(groceryUpdate.key, groceryUpdate.update.in_cart);
+        }
+    });
     server.on('new grocery item', function (groceryItemJSON) {
-        console.log("received item " + groceryItemJSON);
+        console.log("received 'new grocery item' " + groceryItemJSON);
         var groceryItem = JSON.parse(groceryItemJSON);
         var $groceryItems = $('#grocery-items');
         $groceryItems.find("[data-key='" + groceryItem.key + "']").remove();
         var $li = $('<li data-key="' + groceryItem.key + '"></li>');
         var $dataSpan = $('<span class="grocery-item">' + groceryItem.data.name + '</span>');
         var $deleteButton = $('<span class="delete-button">&times</span>');
-        var $inCart = $('<span hidden class="in-cart">in cart!</span>');
+        var $inCart = $('<span hidden class="in-cart">in cart</span>');
         $li.append($dataSpan).append($deleteButton).append($inCart);
         $groceryItems.show().append($li);
-        $deleteButton.click(function(){
+        if (groceryItem.data.hasOwnProperty('in_cart')) {
+            setInCart(groceryItem.key, groceryItem.data.in_cart);
+        }
+        $deleteButton.click(function () {
             deleteGroceryItem($(this));
         });
-        $dataSpan.click(function(){
+        $dataSpan.click(function () {
             toggleInCart($(this));
         });
         $('#no_items').hide();
