@@ -15,7 +15,7 @@ var broadcastAll = function (client, message, data) {
     client.emit(message, data);
 };
 
-var handleClientConnections = function() {
+var handleClientConnections = function () {
     io.on('connection', function (client) {
         console.log('new client connected');
         client.on('request all', function () {
@@ -26,7 +26,7 @@ var handleClientConnections = function() {
                     groceryKeys.forEach(function (groceryKey) {
                         redisClient.hgetall(groceryKey, function (err, groceryData) {
                             var groceryItemJSON = JSON.stringify({key: groceryKey, data: groceryData});
-                            console.log('telling client to add item ' + groceryItemJSON);
+                            console.log("sending 'new grocery item' to client " + groceryItemJSON);
                             client.emit('new grocery item', groceryItemJSON);
                         });
                     });
@@ -37,7 +37,7 @@ var handleClientConnections = function() {
             }
         });
         client.on('new grocery item', function (groceryDataJSON) {
-            console.log('received item: ' + groceryDataJSON);
+            console.log("received 'new grocery item' for " + groceryDataJSON);
             if (isMaster) {
                 var groceryData = JSON.parse(groceryDataJSON);
                 redisClient.incr('grocery key', function (err, newKey) {
@@ -48,31 +48,34 @@ var handleClientConnections = function() {
                     broadcastAll(client, "new grocery item", JSON.stringify({key: groceryKey, data: groceryData}));
                 });
             } else {
-                console.log('sending new grocery item to master: ' + groceryDataJSON);
+                console.log("sending 'new grocery item' to master " + groceryDataJSON);
                 master.emit('new grocery item', groceryDataJSON);
             }
         });
         client.on('remove grocery item', function (groceryKey) {
-            console.log("received remove request for item " + groceryKey);
+            console.log("received remove request for " + groceryKey);
             if (isMaster) {
                 redisClient.del(groceryKey);
                 redisClient.srem('grocery keys', groceryKey);
                 broadcastAll(client, "remove grocery item", groceryKey);
             } else {
-                console.log('sending remove request to master for item ' + groceryKey);
+                console.log("sending 'remove grocery item' to master " + groceryKey);
                 master.emit('remove grocery item', groceryKey);
             }
         });
     });
 };
 
-var handleMasterConnections = function(){
+var handleMasterConnections = function () {
     master.on('new grocery item', function (groceryItemJSON) {
-        console.log("received item "+ groceryItemJSON);
-        //broadcastAll(client, "new grocery item", JSON.stringify({key: groceryKey, data: groceryData}));
+        console.log("received 'new grocery item' from master " + groceryItemJSON);
+        console.log("broadcasting 'new grocery item' for " + groceryItemJSON);
+        io.sockets.emit("new grocery item", groceryItemJSON);
     });
-    master.on('remove grocery item', function(groceryKey){
-        console.log("received remove request for item " + groceryKey);
+    master.on('remove grocery item', function (groceryKey) {
+        console.log("received 'remove grocery item' from master for " + groceryKey);
+        console.log("broadcasting 'remove grocery item' for " + groceryKey);
+        io.sockets.emit("remove grocery item", groceryKey);
     });
 };
 
@@ -87,7 +90,7 @@ if (isSlave) {
     });
 }
 
-if (isMaster){
+if (isMaster) {
     console.log("running as master, connecting to redis");
     redis = require('redis');
     redisClient = redis.createClient(process.env.REDIS_URL);
