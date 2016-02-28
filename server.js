@@ -53,14 +53,29 @@ var handleClientConnections = function () {
             }
         });
         client.on('remove grocery item', function (groceryKey) {
-            console.log("received remove request for " + groceryKey);
+            console.log("received 'remove grocery item' for " + groceryKey);
             if (isMaster) {
                 redisClient.del(groceryKey);
                 redisClient.srem('grocery keys', groceryKey);
                 broadcastAll(client, "remove grocery item", groceryKey);
             } else {
-                console.log("sending 'remove grocery item' to master " + groceryKey);
+                console.log("sending 'remove grocery item' to master for " + groceryKey);
                 master.emit('remove grocery item', groceryKey);
+            }
+        });
+        client.on('toggle in cart', function (groceryKey) {
+            console.log("received 'toggle in cart' for " + groceryKey);
+            if (isMaster) {
+               redisClient.hget(groceryKey, 'in_cart', function(err, val){
+                 var newVal = (val === 'true' ? 'false' : 'true');
+                   console.log('updating ' + groceryKey + " 'in_cart' to '" + newVal + "'" );
+                   redisClient.hset(groceryKey, 'in_cart', newVal);
+                   var data = JSON.stringify({key: groceryKey, update: {'in_cart': newVal}});
+                   broadcastAll(client, 'update grocery item', data);
+               });
+            } else {
+                console.log("sending 'toggle in cart' to master for " + groceryKey);
+                master.emit('toggle in cart', groceryKey);
             }
         });
     });
@@ -76,6 +91,11 @@ var handleMasterConnections = function () {
         console.log("received 'remove grocery item' from master for " + groceryKey);
         console.log("broadcasting 'remove grocery item' for " + groceryKey);
         io.sockets.emit("remove grocery item", groceryKey);
+    });
+    master.on('update grocery item', function(groceryUpdateJSON){
+        console.log("received 'update grocery item' from master " + groceryUpdateJSON);
+        console.log("broadcasting 'update grocery item' for " + groceryUpdateJSON);
+        io.sockets.emit("update grocery item", groceryUpdateJSON);
     });
 };
 
