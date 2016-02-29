@@ -17,7 +17,7 @@ var broadcastAll = function (client, message, data) {
 
 var handleClientConnections = function () {
     io.on('connection', function (client) {
-        console.log('new client connected');
+        console.log('new client connected: ' + client.request.connection.remoteAddress);
         client.on('request all', function () {
             console.log("received 'request all' from client");
             if (isMaster) {
