@@ -17,7 +17,7 @@ var broadcastAll = function (client, message, data) {
 
 var handleClientConnections = function () {
     io.on('connection', function (client) {
-        console.log('new client connected');
+        console.log('new client connected: ' + client.request.connection.remoteAddress);
         client.on('request all', function () {
             console.log("received 'request all' from client");
             if (isMaster) {
@@ -66,13 +66,13 @@ var handleClientConnections = function () {
         client.on('toggle in cart', function (groceryKey) {
             console.log("received 'toggle in cart' for " + groceryKey);
             if (isMaster) {
-               redisClient.hget(groceryKey, 'in_cart', function(err, val){
-                 var newVal = (val === 'true' ? 'false' : 'true');
-                   console.log('updating ' + groceryKey + " 'in_cart' to '" + newVal + "'" );
-                   redisClient.hset(groceryKey, 'in_cart', newVal);
-                   var data = JSON.stringify({key: groceryKey, update: {'in_cart': newVal}});
-                   broadcastAll(client, 'update grocery item', data);
-               });
+                redisClient.hget(groceryKey, 'in_cart', function (err, val) {
+                    var newVal = (val === 'true' ? 'false' : 'true');
+                    console.log('updating ' + groceryKey + " 'in_cart' to '" + newVal + "'");
+                    redisClient.hset(groceryKey, 'in_cart', newVal);
+                    var data = JSON.stringify({key: groceryKey, update: {'in_cart': newVal}});
+                    broadcastAll(client, 'update grocery item', data);
+                });
             } else {
                 console.log("sending 'toggle in cart' to master for " + groceryKey);
                 master.emit('toggle in cart', groceryKey);
@@ -92,7 +92,7 @@ var handleMasterConnections = function () {
         console.log("broadcasting 'remove grocery item' for " + groceryKey);
         io.sockets.emit("remove grocery item", groceryKey);
     });
-    master.on('update grocery item', function(groceryUpdateJSON){
+    master.on('update grocery item', function (groceryUpdateJSON) {
         console.log("received 'update grocery item' from master " + groceryUpdateJSON);
         console.log("broadcasting 'update grocery item' for " + groceryUpdateJSON);
         io.sockets.emit("update grocery item", groceryUpdateJSON);
@@ -101,19 +101,26 @@ var handleMasterConnections = function () {
 
 if (isSlave) {
     console.log("running as slave, connecting to master");
-    ioClient = require('socket.io-client');
-    master = ioClient.connect(process.env.MASTER_URL, {reconnect: true});
-    master.on('connect', function () {
-        console.log('connected to master');
-        handleMasterConnections();
-        handleClientConnections();
-    });
+    if (process.env.MASTER_URL) {
+        ioClient = require('socket.io-client');
+        master = ioClient.connect(process.env.MASTER_URL, {reconnect: true});
+        master.on('connect', function () {
+            console.log('connected to master');
+            handleMasterConnections();
+            handleClientConnections();
+        });
+    } else {
+        console.log("unable to connect to master, url is null");
+    }
 }
 
 if (isMaster) {
     console.log("running as master, connecting to redis");
     redis = require('redis');
     redisClient = redis.createClient(process.env.REDIS_URL);
+    redisClient.on("error", function (err) {
+        console.log(err.toString());
+    });
     handleClientConnections();
 }
 
