@@ -75,4 +75,5 @@ button:focus {
 .in-cart {
     color: white;
     background-color: red;
+    border-radius: 5px;
 }
