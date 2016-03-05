@@ -61,7 +61,7 @@ button:focus {
     background: #9cff9c;
 }
 
-.delete-button, .in-cart {
+.delete-button, .in-cart, .purchased {
     padding-left: 10px;
     padding-right: 10px;
     float: right;
@@ -70,6 +70,12 @@ button:focus {
 
 .delete-button {
     color: red;
+}
+
+.purchased {
+    color: white;
+    background-color: blue;
+    border-radius: 5px;
 }
 
 .in-cart {

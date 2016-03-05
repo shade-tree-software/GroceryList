@@ -10,7 +10,7 @@ var isMaster = (process.env.MASTER === 'true');
 var isSlave = !isMaster;
 
 var broadcastAll = function (client, message, data) {
-    console.log("broadcasting '" + message + "' for " + data);
+    console.log("broadcasting '" + message + "' " + data);
     client.broadcast.emit(message, data);
     client.emit(message, data);
 };
@@ -42,7 +42,7 @@ var handleClientConnections = function () {
                 var groceryData = JSON.parse(groceryDataJSON);
                 redisClient.incr('grocery key', function (err, newKey) {
                     var groceryKey = 'groceries:' + newKey;
-                    console.log('installing item ' + groceryKey + ' ' + groceryDataJSON);
+                    console.log('inserting item ' + groceryKey + ' ' + groceryDataJSON);
                     redisClient.sadd('grocery keys', groceryKey);
                     redisClient.hmset(groceryKey, groceryData);
                     broadcastAll(client, "new grocery item", JSON.stringify({key: groceryKey, data: groceryData}));
@@ -63,19 +63,26 @@ var handleClientConnections = function () {
                 master.emit('remove grocery item', groceryKey);
             }
         });
-        client.on('toggle in cart', function (groceryKey) {
-            console.log("received 'toggle in cart' for " + groceryKey);
+        client.on('change state', function (groceryKey) {
+            console.log("received 'change state' for " + groceryKey);
             if (isMaster) {
-                redisClient.hget(groceryKey, 'in_cart', function (err, val) {
-                    var newVal = (val === 'true' ? 'false' : 'true');
-                    console.log('updating ' + groceryKey + " 'in_cart' to '" + newVal + "'");
-                    redisClient.hset(groceryKey, 'in_cart', newVal);
-                    var data = JSON.stringify({key: groceryKey, update: {'in_cart': newVal}});
+                redisClient.hget(groceryKey, 'state', function (err, val) {
+                    var newVal;
+                    if (val === 'in cart'){
+                        newVal = 'purchased';
+                    } else if (val === 'purchased'){
+                        newVal = 'requested';
+                    } else {
+                        newVal = 'in cart';
+                    }
+                    console.log('updating ' + groceryKey + " 'state' to '" + newVal + "'");
+                    redisClient.hset(groceryKey, 'state', newVal);
+                    var data = JSON.stringify({key: groceryKey, update: {'state': newVal}});
                     broadcastAll(client, 'update grocery item', data);
                 });
             } else {
-                console.log("sending 'toggle in cart' to master for " + groceryKey);
-                master.emit('toggle in cart', groceryKey);
+                console.log("sending 'change state' to master for " + groceryKey);
+                master.emit('change state', groceryKey);
             }
         });
     });
