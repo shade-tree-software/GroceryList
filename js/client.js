@@ -11,7 +11,7 @@ $(function () {
         server.emit('change state', groceryKey);
     };
 
-    var updateState = function(key, val){
+    var updateState = function (key, val) {
         $elem = $('#grocery-items').find("[data-key='" + key + "']").find('.grocery-item');
         if (val === 'in cart') {
             $elem.css("text-decoration", 'line-through');
@@ -28,6 +28,11 @@ $(function () {
             $elem.parent().find('.in-cart').hide();
             $elem.parent().find('.purchased').hide();
             $elem.parent().find('.delete-button').show();
+        }
+        if ($(".purchased").filter(":visible").size() > 0) {
+            $('#delete_purchased').show();
+        } else {
+            $('#delete_purchased').hide();
         }
     };
 
@@ -68,14 +73,25 @@ $(function () {
         });
         $('#no_items').hide();
     });
-    server.on('remove grocery item', function (groceryKey) {
-        console.log("received 'remove grocery item' from server for " + groceryKey);
+    var removeGroceryItem = function ($groceryItem) {
+        $groceryItem.each(function () {
+            $(this).remove();
+        });
+        if ($(".purchased").filter(":visible").size() > 0) {
+            $('#delete_purchased').show();
+        } else {
+            $('#delete_purchased').hide();
+        }
         var $groceryItems = $('#grocery-items');
-        $groceryItems.find("[data-key='" + groceryKey + "']").remove();
         if ($groceryItems.find('li').length < 1) {
             $groceryItems.hide();
             $('#no_items').show();
         }
+    };
+    server.on('remove grocery item', function (groceryKey) {
+        console.log("received 'remove grocery item' from server for " + groceryKey);
+        var $groceryItem = $('#grocery-items').find("[data-key='" + groceryKey + "']");
+        removeGroceryItem($groceryItem);
     });
     $('#new_item_form').submit(function (e) {
         e.preventDefault();
@@ -87,5 +103,10 @@ $(function () {
             server.emit('new grocery item', groceryDataJSON);
             $newItemInput.val('');
         }
+    });
+    $('#delete_purchased').click(function () {
+        $(".purchased").filter(":visible").each(function () {
+            deleteGroceryItem($(this));
+        });
     });
 });
