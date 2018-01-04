@@ -33,7 +33,7 @@
     float: right;
 }
 
-#delete_purchased {
+#delete_purchased, #purchase_cart {
     border-radius: 10px;
     margin-top: 10px;
 }
@@ -54,7 +54,7 @@ button:focus {
     padding: 7px;
 }
 
-#grocery-items li, #new_item_input, #new_item_submit, #delete_purchased {
+#grocery-items li, #new_item_input, #new_item_submit, #delete_purchased, #purchase_cart {
     font-size: 20px;
 }
 
