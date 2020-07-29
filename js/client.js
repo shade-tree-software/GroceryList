@@ -85,7 +85,10 @@ $(function () {
     var $deleteButton = $('<span class="delete-button">&times</span>');
     var $inCart = $('<span hidden class="in-cart">in cart</span>');
     var $purchased = $('<span hidden class="purchased">purchased</span>');
-    $li.append($dataSpan).append($deleteButton).append($inCart).append($purchased);
+    var $quarantined = $('<span hidden class="quarantined">quarantined</span>')
+    var $unavailable = $('<span hidden class="unavailable">unavailable</span>')
+    $li.append($dataSpan).append($deleteButton).append($inCart)
+      .append($purchased).append($quarantined).append($unavailable)
     $groceryItems.show().append($li);
     if (groceryItem.data.hasOwnProperty('state')) {
       updateState(groceryItem.key, groceryItem.data.state);
