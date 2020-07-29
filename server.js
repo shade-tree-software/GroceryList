@@ -71,6 +71,10 @@ var handleClientConnections = function () {
                     if (val === 'in cart'){
                         newVal = 'purchased';
                     } else if (val === 'purchased'){
+                        newVal = 'quarantined';
+                    } else if (val === 'quarantined'){
+                        newVal = 'unavailable';
+                    } else if (val === 'unavailable'){
                         newVal = 'requested';
                     } else {
                         newVal = 'in cart';
