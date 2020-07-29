@@ -17,16 +17,36 @@ $(function () {
       $elem.css("text-decoration", 'line-through');
       $elem.parent().find('.delete-button').hide();
       $elem.parent().find('.purchased').hide();
+      $elem.parent().find('.quarantined').hide();
+      $elem.parent().find('.unavailable').hide();
       $elem.parent().find('.in-cart').show();
     } else if (val === 'purchased') {
       $elem.css("text-decoration", 'line-through');
       $elem.parent().find('.delete-button').hide();
       $elem.parent().find('.in-cart').hide();
       $elem.parent().find('.purchased').show();
+      $elem.parent().find('.quarantined').hide();
+      $elem.parent().find('.unavailable').hide();
+    } else if (val === 'quarantined') {
+      $elem.css("text-decoration", 'line-through');
+      $elem.parent().find('.delete-button').hide();
+      $elem.parent().find('.in-cart').hide();
+      $elem.parent().find('.purchased').hide();
+      $elem.parent().find('.quarantined').show();
+      $elem.parent().find('.unavailable').hide();
+    } else if (val === 'unavailable') {
+      $elem.css("text-decoration", 'line-through');
+      $elem.parent().find('.delete-button').hide();
+      $elem.parent().find('.in-cart').hide();
+      $elem.parent().find('.purchased').hide();
+      $elem.parent().find('.quarantined').hide();
+      $elem.parent().find('.unavailable').show();
     } else {
       $elem.css("text-decoration", '');
       $elem.parent().find('.in-cart').hide();
       $elem.parent().find('.purchased').hide();
+      $elem.parent().find('.quarantined').hide();
+      $elem.parent().find('.unavailable').hide();
       $elem.parent().find('.delete-button').show();
     }
     if ($(".purchased").filter(":visible").size() > 0) {
