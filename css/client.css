@@ -95,6 +95,12 @@ button:focus {
     border-radius: 5px;
 }
 
+.already-have {
+    color: white;
+    background-color: black;
+    border-radius: 5px;
+}
+
 .in-cart {
     color: white;
     background-color: green;
