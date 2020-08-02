@@ -75,6 +75,8 @@ var handleClientConnections = function () {
                     } else if (val === 'quarantined'){
                         newVal = 'unavailable';
                     } else if (val === 'unavailable'){
+                        newVal = 'already have';
+                    } else if (val === 'already have'){
                         newVal = 'requested';
                     } else {
                         newVal = 'in cart';
