@@ -100,7 +100,7 @@ $(function () {
     var $purchased = $('<span hidden class="purchased">purchased</span>');
     var $quarantined = $('<span hidden class="quarantined">quarantined</span>')
     var $unavailable = $('<span hidden class="unavailable">unavailable</span>')
-    var $alreadyHave = $('<span hidden class="already-have">already have</span>')
+    var $alreadyHave = $(`<span hidden class="already-have">don't need</span>`)
     $li.append($dataSpan).append($deleteButton).append($inCart)
       .append($purchased).append($quarantined).append($unavailable).append($alreadyHave)
     $groceryItems.show().append($li);
