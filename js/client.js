@@ -62,11 +62,11 @@ $(function () {
       $elem.parent().find('.already-have').hide();
       $elem.parent().find('.delete-button').show();
     }
-    if ($(".purchased").filter(":visible").size() > 0) {
-      $('#delete_purchased').show();
-    } else {
-      $('#delete_purchased').hide();
-    }
+    //if ($(".purchased").filter(":visible").size() > 0) {
+    //  $('#delete_purchased').show();
+    //} else {
+    //  $('#delete_purchased').hide();
+    //}
     if ($(".in-cart").filter(":visible").size() > 0) {
       $('#purchase_cart').show();
     } else {
@@ -97,7 +97,7 @@ $(function () {
     var $dataSpan = $('<span class="grocery-item">' + groceryItem.data.name + '</span>');
     var $deleteButton = $('<span class="delete-button">&times</span>');
     var $inCart = $('<span hidden class="in-cart">in cart</span>');
-    var $purchased = $('<span hidden class="purchased">purchased</span>');
+    var $purchased = $('<span hidden class="purchased">on the way</span>');
     var $quarantined = $('<span hidden class="quarantined">quarantined</span>')
     var $unavailable = $('<span hidden class="unavailable">unavailable</span>')
     var $alreadyHave = $(`<span hidden class="already-have">don't need</span>`)
@@ -119,11 +119,11 @@ $(function () {
     $groceryItem.each(function () {
       $(this).remove();
     });
-    if ($(".purchased").filter(":visible").size() > 0) {
-      $('#delete_purchased').show();
-    } else {
-      $('#delete_purchased').hide();
-    }
+    //if ($(".purchased").filter(":visible").size() > 0) {
+    //  $('#delete_purchased').show();
+    //} else {
+    //  $('#delete_purchased').hide();
+    //}
     if ($(".in-cart").filter(":visible").size() > 0) {
       $('#purchase_cart').show();
     } else {
